@@ -26,7 +26,7 @@
     "dependencies" : {
         "node-gyp" : "*"
     },
-    "license" : "MIT/X11",
+    "license" : "MIT or LGPL",
     "engine" : {
         "node" : ">=0.6.0"
     },
