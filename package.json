@@ -1,0 +1,36 @@
+{
+    "name" : "sox",
+    "version" : "0.0.0",
+    "description" : "play, record and synthesize audio with bindings for libsox",
+    "main" : "index.js",
+    "repository" : {
+        "type" : "git",
+        "url" : "http://github.com/substack/node-sox.git"
+    },
+    "keywords": [
+        "sox",
+        "audio",
+        "play",
+        "record",
+        "music",
+        "synth",
+        "wav",
+        "mp3",
+        "ogg"
+    ],
+    "author" : {
+        "name" : "James Halliday",
+        "email" : "mail@substack.net",
+        "url" : "http://substack.net"
+    },
+    "dependencies" : {
+        "node-gyp" : "*"
+    },
+    "license" : "MIT/X11",
+    "engine" : {
+        "node" : ">=0.6.0"
+    },
+    "scripts" : {
+        "install" : "node-gyp configure build"
+    }
+}
