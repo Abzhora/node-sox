@@ -36,7 +36,7 @@ static int eio_flow_after (eio_req *ereq) {
     return 0;
 }
 
-Handle<Value> hello(const Arguments& arguments) {
+Handle<Value> play(const Arguments& arguments) {
     HandleScope scope;
     
     node_sox_request *req;
@@ -70,7 +70,7 @@ Handle<Value> hello(const Arguments& arguments) {
     assert(sox_effect_options(e, 1, args) == SOX_SUCCESS);
     assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
     free(e);
-
+    
     if (in->signal.rate != out->signal.rate) {
         e = sox_create_effect(sox_find_effect("rate"));
         assert(sox_effect_options(e, 0, NULL) == SOX_SUCCESS);
@@ -80,14 +80,14 @@ Handle<Value> hello(const Arguments& arguments) {
         );
         free(e);
     }
-
+    
     if (in->signal.channels != out->signal.channels) {
         e = sox_create_effect(sox_find_effect("channels"));
         assert(sox_effect_options(e, 0, NULL) == SOX_SUCCESS);
         assert(sox_add_effect(chain, e, &in->signal, &out->signal) == SOX_SUCCESS);
         free(e);
     }
-
+    
     e = sox_create_effect(sox_find_effect("output"));
     args[0] = (char *) out;
     assert(sox_effect_options(e, 1, args) == SOX_SUCCESS);
@@ -97,12 +97,14 @@ Handle<Value> hello(const Arguments& arguments) {
     eio_custom(eio_flow, EIO_PRI_DEFAULT, eio_flow_after, req);
     ev_ref(EV_DEFAULT_UC);
     
-    return scope.Close(String::New("world"));
+    Persistent<Object> player = Persistent<Object>::New(Object::New());
+    player->Set(String::New("x"), Integer::New(5));
+    return scope.Close(player);
 }
 
 void init(Handle<Object> target) {
     sox_init();
-    NODE_SET_METHOD(target, "hello", hello);
+    NODE_SET_METHOD(target, "play", play);
 }
 
 NODE_MODULE(sox, init);

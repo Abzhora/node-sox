@@ -1,5 +1,6 @@
 var sox = require('./build/Release/sox');
-var s = sox.hello({
-    onend : function () { console.log('__END__') },
+
+var player = sox.play({
+    onend : function () { console.log('end') },
 });
-console.log(s);
+console.dir(player);
