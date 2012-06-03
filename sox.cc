@@ -1,36 +1,67 @@
+// largely derived from the sox examples
+
 #include <node.h>
 #include <v8.h>
 using namespace v8;
 
 #include <sox.h>
+#include <assert.h>
 
-Handle<Value> hello(const Arguments& args) {
+Handle<Value> hello(const Arguments& arguments) {
     HandleScope scope;
     
-    sox_format_t *rh = sox_open_read("test.wav", NULL, NULL, NULL);
-    sox_signalinfo_t signal;
-    signal.rate = 48000;
-    signal.channels = 2;
-    signal.precision = 16;
-    signal.length = 0;
-    signal.mult = NULL;
+    sox_format_t *in, *out;
+    in = sox_open_read("test.wav", NULL, NULL, NULL);
+    assert(in);
     
-    sox_encodinginfo_t ei;
-    ei.encoding = SOX_ENCODING_SIGN2;
-    ei.bits_per_sample = 0;
-    ei.compression = 0;
-    ei.reverse_bytes = SOX_OPTION_DEFAULT;
-    ei.reverse_nibbles = SOX_OPTION_DEFAULT;
-    ei.reverse_bits = SOX_OPTION_DEFAULT;
-    ei.opposite_endian = sox_false;
+    out = sox_open_write("default", &in->signal, NULL, "alsa", NULL, NULL);
+    assert(out);
     
-    sox_format_t *wh = sox_open_write("alsa", &signal, &ei, "wav", NULL, false);
+    sox_effects_chain_t *chain;
+    chain = sox_create_effects_chain(&in->encoding, &out->encoding);
+    
+    sox_effect_t *e;
+    char * args[10];
+    
+    e = sox_create_effect(sox_find_effect("input"));
+    args[0] = (char *) in;
+    assert(sox_effect_options(e, 1, args) == SOX_SUCCESS);
+    assert(sox_add_effect(chain, e, &in->signal, &in->signal) == SOX_SUCCESS);
+    free(e);
+
+    if (in->signal.rate != out->signal.rate) {
+        e = sox_create_effect(sox_find_effect("rate"));
+        assert(sox_effect_options(e, 0, NULL) == SOX_SUCCESS);
+        assert(
+            sox_add_effect(chain, e, &in->signal, &out->signal)
+            == SOX_SUCCESS
+        );
+        free(e);
+    }
+
+    if (in->signal.channels != out->signal.channels) {
+        e = sox_create_effect(sox_find_effect("channels"));
+        assert(sox_effect_options(e, 0, NULL) == SOX_SUCCESS);
+        assert(sox_add_effect(chain, e, &in->signal, &out->signal) == SOX_SUCCESS);
+        free(e);
+    }
+
+    e = sox_create_effect(sox_find_effect("output"));
+    args[0] = (char *) out;
+    assert(sox_effect_options(e, 1, args) == SOX_SUCCESS);
+    assert(sox_add_effect(chain, e, &in->signal, &out->signal) == SOX_SUCCESS);
+    free(e);
+    
+    sox_flow_effects(chain, NULL, NULL);
+    sox_delete_effects_chain(chain);
+    sox_close(out);
+    sox_close(in);
     
     return scope.Close(String::New("world"));
 }
 
 void init(Handle<Object> target) {
-    sox_format_init();
+    sox_init();
     NODE_SET_METHOD(target, "hello", hello);
 }
 
