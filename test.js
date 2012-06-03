@@ -1,6 +1,6 @@
-var sox = require('./build/Release/sox');
+var Player = require('./build/Release/sox').Player;
 
-var player = sox.play({
+var player = new Player;
+player.play({
     onend : function () { console.log('end') },
 });
-console.dir(player);
