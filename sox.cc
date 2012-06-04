@@ -2,6 +2,8 @@
 
 #include <node.h>
 #include <v8.h>
+#include <node_buffer.h>
+
 using namespace v8;
 using namespace node;
 
@@ -13,7 +15,6 @@ struct node_sox_request {
     sox_effects_chain_t *chain;
     Persistent<Function> ondata;
     Persistent<Function> onend;
-    bool out_open;
     char *buffer;
     size_t buffer_size;
 };
@@ -79,26 +80,23 @@ public:
         assert(in);
         req->in = in;
         
-        Local<Object> ondata_ = Local<Object>::Cast(
+        Local<Function> ondata_ = Local<Function>::Cast(
             opts->Get(String::NewSymbol("ondata"))
         );
         
-        if (!ondata_->IsUndefined()) {
-            req->ondata = Persistent<Function>::New(
-                Local<Function>::Cast(ondata_)
+        if (ondata_->IsUndefined()) {
+            out = sox_open_write(
+                "default", &in->signal, NULL, "alsa", NULL, NULL
             );
+        }
+        else {
+            req->ondata = Persistent<Function>::New(ondata_);
             req->buffer = (char *) malloc(4096);
             req->buffer_size = 4096;
             
             out = sox_open_memstream_write(
                 &req->buffer, &req->buffer_size, &in->signal,
                 NULL, "sox", NULL
-            );
-            req->out_open = true;
-        }
-        else {
-            out = sox_open_write(
-                "default", &in->signal, NULL, "alsa", NULL, NULL
             );
         }
         
@@ -159,25 +157,33 @@ public:
         node_sox_request *req = (node_sox_request *) ereq->data;
         
         size_t number_read = sox_read(req->in, samples, (size_t) 4096);
-        req->out_open = number_read > 0;
-printf("%d bytes read\r\n", (int) number_read);
-fflush(stdout);
-        assert(sox_write(req->out, samples, number_read) == number_read);
+        //req->buffer_size = number_read;
+        
+        if (number_read) {
+            req->buffer_size = number_read;
+            assert(sox_write(req->out, samples, number_read) == number_read);
+        }
     }
     
     static int eio_rw_after (eio_req *ereq) {
         node_sox_request *req = (node_sox_request *) ereq->data;
         
         HandleScope scope;
-        Local<Value> argv[0];
+        Local<Value> *argv;
+        Buffer * buf;
         
-        if (!req->out_open) {
+        if (req->buffer_size == 0) {
             req->onend->Call(Context::GetCurrent()->Global(), 1, argv);
             
             req->onend.Dispose();
             free(req);
         }
         else {
+            buf = Buffer::New(req->buffer, req->buffer_size);
+            argv = (Local<Value> *) malloc(sizeof(Local<Value>));
+            
+            argv[1] = buf->handle_->ToObject();
+            req->ondata->Call(Context::GetCurrent()->Global(), 2, argv);
             eio_custom(eio_rw, EIO_PRI_DEFAULT, eio_rw_after, req);
         }
         
