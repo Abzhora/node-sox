@@ -18,4 +18,4 @@ npm install sox
 license
 =======
 
-LGPL (same as libsox) or MIT
+LGPL (same as (parts of) libsox)
