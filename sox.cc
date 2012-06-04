@@ -157,7 +157,7 @@ public:
         node_sox_request *req = (node_sox_request *) ereq->data;
         
         size_t number_read = sox_read(req->in, samples, (size_t) 4096);
-        //req->buffer_size = number_read;
+        req->buffer_size = number_read;
         
         if (number_read) {
             req->buffer_size = number_read;
@@ -169,10 +169,11 @@ public:
         node_sox_request *req = (node_sox_request *) ereq->data;
         
         HandleScope scope;
-        Local<Value> *argv;
+        Handle<Value> *argv;
         Buffer * buf;
         
         if (req->buffer_size == 0) {
+            argv = (Handle<Value> *) malloc(sizeof(Handle<Value>));
             req->onend->Call(Context::GetCurrent()->Global(), 1, argv);
             
             req->onend.Dispose();
@@ -180,10 +181,10 @@ public:
         }
         else {
             buf = Buffer::New(req->buffer, req->buffer_size);
-            argv = (Local<Value> *) malloc(sizeof(Local<Value>));
+            argv = (Handle<Value> *) malloc(sizeof(Handle<Value>));
+            argv[0] = buf->handle_;
             
-            argv[1] = buf->handle_->ToObject();
-            req->ondata->Call(Context::GetCurrent()->Global(), 2, argv);
+            req->ondata->Call(Context::GetCurrent()->Global(), 1, argv);
             eio_custom(eio_rw, EIO_PRI_DEFAULT, eio_rw_after, req);
         }
         
