@@ -9,6 +9,12 @@ using namespace node;
 
 #include <sox.h>
 #include <assert.h>
+#include <string>
+
+static inline std::string SaveString(const v8::Handle<v8::Value>& value) {
+    v8::String::Utf8Value v(value);
+    return std::string(*v, v.length());
+}
 
 struct node_sox_request {
     sox_format_t *in, *out;
@@ -84,7 +90,15 @@ public:
             opts->Get(String::NewSymbol("ondata"))
         );
         
-        if (ondata_->IsUndefined()) {
+        Local<Value> outfile = opts->Get(String::NewSymbol("outfile"));
+        
+        if (!outfile->IsUndefined()) {
+            out = sox_open_write(
+                SaveString(outfile).c_str(),
+                &in->signal, NULL, NULL, NULL, NULL
+            );
+        }
+        else if (ondata_->IsUndefined()) {
             out = sox_open_write(
                 "default", &in->signal, NULL, "alsa", NULL, NULL
             );
