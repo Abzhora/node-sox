@@ -1,8 +1,13 @@
 var Player = require('./build/Release/sox').Player;
 
 var player = new Player;
+// player.output(file);
+// player.ondata = ...
+// player.onend = ...
+// player.addEffect(...);
+
 player.play({
-    outfile : 'woo.wav',
+    //outfile : 'woo.wav',
     /*
     ondata : function (buf) {
         console.log(buf.length);
@@ -11,6 +16,5 @@ player.play({
     */
     onend : function () {
         console.log('end');
-        ws.end();
     },
 });
