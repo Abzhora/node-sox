@@ -18,12 +18,12 @@ public:
         constructor_template->InstanceTemplate()->SetInternalFieldCount(1);
         constructor_template->SetClassName(String::NewSymbol("Format"));
         
+        NODE_SET_PROTOTYPE_METHOD(constructor_template, "openRead", OpenRead);
+        
         target->Set(
             String::NewSymbol("Format"),
             constructor_template->GetFunction()
         );
-        
-        NODE_SET_METHOD(target, "openRead", OpenRead);
     }
     
     static Handle<Value> New(const Arguments &args) {
@@ -35,13 +35,12 @@ public:
     
     static Handle<Value> OpenRead(const Arguments &args) {
         HandleScope scope;
-        Handle<Object> h = constructor_template->GetFunction()->New();
-        Format *obj = ObjectWrap::Unwrap<Format>(h);
-        
+        Format *fmt = ObjectWrap::Unwrap<Format>(args.This());
         String::Utf8Value path(args[0]);
-        obj->format = sox_open_read(*path, NULL, NULL, NULL);
+        fmt->format = sox_open_read(*path, NULL, NULL, NULL);
+        fmt->Ref();
         
-        return h;
+        return Undefined();
     }
 };
 
