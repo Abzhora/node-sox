@@ -26,6 +26,9 @@ public:
             constructor_template, "readFile", ReadFile
         );
         NODE_SET_PROTOTYPE_METHOD(
+            constructor_template, "getSignal", GetSignal
+        );
+        NODE_SET_PROTOTYPE_METHOD(
             constructor_template, "writeFile", WriteFile
         );
         NODE_SET_PROTOTYPE_METHOD(
@@ -53,6 +56,12 @@ public:
         fmt->Ref();
         
         return Undefined();
+    }
+    
+    static Handle<Value> GetSignal(const Arguments &args) {
+        HandleScope scope;
+        Format *fmt = ObjectWrap::Unwrap<Format>(args.This());
+        return Signal::Properties(fmt->format->signal);
     }
     
     static Handle<Value> WriteFile(const Arguments &args) {

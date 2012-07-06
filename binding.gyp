@@ -8,7 +8,8 @@
     {
       "target_name": "format",
       "sources": [ "src/format.cc" ],
-      "libraries" : [ "-lsox" ]
+      "libraries" : [ "-lsox" ],
+      "include_dirs" : [ "src" ]
     }
   ]
 }

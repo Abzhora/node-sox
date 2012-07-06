@@ -32,17 +32,21 @@ public:
         Signal *sig = new Signal();
         sig->signal = (sox_signalinfo_t *) malloc(sizeof(sox_signalinfo_t));
         
-        sig->signal->rate = (double) args[0]->NumberValue();
-        sig->signal->channels = (unsigned) args[1]->Int32Value();
-        sig->signal->precision = (unsigned) args[2]->Int32Value();
-        sig->signal->length = (size_t) args[3]->Int32Value();
+        Handle<Object> opts = Handle<Object>::Cast(args[0]);
         
-        if (args[4]->IsUndefined()) {
-            sig->signal->mult = NULL;
-        }
-        else {
+        sig->signal->rate = (double)
+            opts->Get(String::NewSymbol("rate"))->NumberValue();
+        sig->signal->channels = (unsigned)
+            opts->Get(String::NewSymbol("channels"))->Int32Value();
+        sig->signal->precision = (unsigned)
+            opts->Get(String::NewSymbol("precision"))->Int32Value();
+        sig->signal->length = (size_t)
+            opts->Get(String::NewSymbol("length"))->Int32Value();
+        
+        sig->signal->mult = NULL;
+        if (!opts->Get(String::NewSymbol("mult"))->IsUndefined()) {
             double * mult = (double *) malloc(sizeof(double));
-            *mult = args[4]->NumberValue();
+            *mult = opts->Get(String::NewSymbol("mult"))->NumberValue();
             sig->signal->mult = mult;
         }
         
@@ -50,6 +54,21 @@ public:
         return args.This();
     }
     
+    static Handle<Value> Properties(sox_signalinfo_t sig) {
+        Handle<Object> target = Object::New();
+        target->Set(String::NewSymbol("rate"), Number::New(sig.rate));
+        target->Set(String::NewSymbol("channels"), Int32::New(sig.channels));
+        target->Set(String::NewSymbol("precision"), Int32::New(sig.precision));
+        target->Set(String::NewSymbol("length"), Int32::New(sig.length));
+        
+        if (sig.mult == NULL) {
+            target->Set(String::NewSymbol("mult"), Undefined());
+        }
+        else {
+            target->Set(String::NewSymbol("mult"), Number::New(*sig.mult));
+        }
+        return target;
+    }
 };
 
 Persistent<FunctionTemplate> Signal::constructor_template;
