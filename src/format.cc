@@ -31,6 +31,7 @@ public:
         NODE_SET_PROTOTYPE_METHOD(
             constructor_template, "writeFile", WriteFile
         );
+        NODE_SET_PROTOTYPE_METHOD(constructor_template, "play", Play);
         NODE_SET_PROTOTYPE_METHOD(
             constructor_template, "memstreamWrite", MemstreamWrite
         );
@@ -75,6 +76,29 @@ public:
         
         fmt->format = sox_open_write(
             *path, signal->signal, NULL, NULL, NULL, NULL
+        );
+        fmt->Ref();
+        
+        return Undefined();
+    }
+    
+    static Handle<Value> Play(const Arguments &args) {
+        HandleScope scope;
+        Format *fmt = ObjectWrap::Unwrap<Format>(args.This());
+        
+        Signal *signal = ObjectWrap::Unwrap<Signal>(
+            Handle<Object>::Cast(args[0])
+        );
+        const char * dev;
+        if (args[1]->IsUndefined()) {
+            dev = "alsa";
+        }
+        else {
+            dev = *String::Utf8Value(args[1]);
+        }
+        
+        fmt->format = sox_open_write(
+            "default", signal->signal, NULL, dev, NULL, NULL
         );
         fmt->Ref();
         
