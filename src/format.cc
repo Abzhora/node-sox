@@ -23,7 +23,7 @@ public:
             constructor_template->GetFunction()
         );
         
-        NODE_SET_METHOD(target, "read", Read);
+        NODE_SET_METHOD(target, "openRead", OpenRead);
     }
     
     static Handle<Value> New(const Arguments &args) {
@@ -33,10 +33,15 @@ public:
         return args.This();
     }
     
-    static Handle<Value> Read(const Arguments &args) {
+    static Handle<Value> OpenRead(const Arguments &args) {
         HandleScope scope;
-        Handle<Value> format = constructor_template->GetFunction()->New();
-        return format;
+        Handle<Object> h = constructor_template->GetFunction()->New();
+        Format *obj = ObjectWrap::Unwrap<Format>(h);
+        
+        String::Utf8Value path(args[0]);
+        obj->format = sox_open_read(*path, NULL, NULL, NULL);
+        
+        return h;
     }
 };
 
