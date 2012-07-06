@@ -6,4 +6,5 @@ var fmt = new Format;
 fmt.readFile('test.wav');
 var sig = new Signal(fmt.getSignal());
 var wf = new Format;
-wf.play(sig, 'alsa');
+//wf.play(sig, 'alsa');
+wf.play(sig);
