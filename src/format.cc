@@ -9,7 +9,7 @@ using namespace v8;
 using namespace node;
 
 #include <sox.h>
-#include "signal.cc"
+#include "signal.hpp"
 
 class Format : public ObjectWrap {
 public:
