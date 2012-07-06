@@ -1,3 +1,6 @@
+#ifndef NODE_SOX_FORMAT
+#define NODE_SOX_FORMAT
+
 #include <node.h>
 #include <v8.h>
 #include <node_buffer.h>
@@ -6,6 +9,7 @@ using namespace v8;
 using namespace node;
 
 #include <sox.h>
+#include "signal.cc"
 
 class Format : public ObjectWrap {
 public:
@@ -18,7 +22,15 @@ public:
         constructor_template->InstanceTemplate()->SetInternalFieldCount(1);
         constructor_template->SetClassName(String::NewSymbol("Format"));
         
-        NODE_SET_PROTOTYPE_METHOD(constructor_template, "openRead", OpenRead);
+        NODE_SET_PROTOTYPE_METHOD(
+            constructor_template, "readFile", ReadFile
+        );
+        NODE_SET_PROTOTYPE_METHOD(
+            constructor_template, "writeFile", WriteFile
+        );
+        NODE_SET_PROTOTYPE_METHOD(
+            constructor_template, "memstreamWrite", MemstreamWrite
+        );
         
         target->Set(
             String::NewSymbol("Format"),
@@ -33,13 +45,34 @@ public:
         return args.This();
     }
     
-    static Handle<Value> OpenRead(const Arguments &args) {
+    static Handle<Value> ReadFile(const Arguments &args) {
         HandleScope scope;
         Format *fmt = ObjectWrap::Unwrap<Format>(args.This());
         String::Utf8Value path(args[0]);
         fmt->format = sox_open_read(*path, NULL, NULL, NULL);
         fmt->Ref();
         
+        return Undefined();
+    }
+    
+    static Handle<Value> WriteFile(const Arguments &args) {
+        HandleScope scope;
+        Format *fmt = ObjectWrap::Unwrap<Format>(args.This());
+        
+        String::Utf8Value path(args[0]);
+        Signal *signal = ObjectWrap::Unwrap<Signal>(
+            Handle<Object>::Cast(args[1])
+        );
+        
+        fmt->format = sox_open_write(
+            *path, signal->signal, NULL, NULL, NULL, NULL
+        );
+        fmt->Ref();
+        
+        return Undefined();
+    }
+    
+    static Handle<Value> MemstreamWrite (const Arguments &args) {
         return Undefined();
     }
 };
@@ -49,6 +82,9 @@ Persistent<FunctionTemplate> Format::constructor_template;
 void init(Handle<Object> target) {
     HandleScope scope;
     Format::Initialize(target);
+    Signal::Initialize(target);
 }
 
 NODE_MODULE(format, init);
+
+#endif
