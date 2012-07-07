@@ -12,6 +12,7 @@ using namespace node;
 #include "chain.hpp"
 
 void init(Handle<Object> target) {
+    assert(sox_init() == SOX_SUCCESS);
     HandleScope scope;
     Format::Initialize(target);
     Signal::Initialize(target);

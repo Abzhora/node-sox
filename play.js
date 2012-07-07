@@ -7,10 +7,8 @@ var Chain = sox.Chain;
 var rf = new Format;
 rf.readFile('test.wav');
 
-var sig = new Signal(rf.getSignal());
 var wf = new Format;
-//wf.play(sig, 'alsa');
-wf.play(sig);
+wf.play(new Signal(rf.getSignal()));
 
 var c = new Chain(rf, wf);
 c.addEffect(new Effect('input', ['test.wav']), rf, rf);

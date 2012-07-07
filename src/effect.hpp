@@ -9,6 +9,12 @@ using namespace v8;
 using namespace node;
 
 #include <sox.h>
+#include <string>
+
+static inline const char * CString(const v8::Handle<v8::Value>& value) {
+    v8::String::Utf8Value v(value);
+    return std::string(*v, v.length()).c_str();
+}
 
 class Effect : public ObjectWrap {
 public:
@@ -30,8 +36,7 @@ public:
     static Handle<Value> New(const Arguments &args) {
         HandleScope scope;
         Effect *e = new Effect();
-        String::Utf8Value name(args[0]);
-        e->effect = sox_create_effect(sox_find_effect(*name));
+        e->effect = sox_create_effect(sox_find_effect(CString(args[0])));
         
         Local<Array> xs;
         char * argv[10];
@@ -44,9 +49,11 @@ public:
         }
         
         for (unsigned int i = 0; i < 10 && i < xs->Length(); i++) {
-            argv[i] = *String::Utf8Value(xs->Get(Integer::New(i)));
+            argv[i] = (char *) CString(xs->Get(Integer::New(i)));
         }
-        sox_effect_options(e->effect, xs->Length(), argv);
+printf("%s...\r\n" , CString(args[0])); fflush(stdout);
+        assert(sox_effect_options(e->effect, xs->Length(), argv) == SOX_SUCCESS);
+printf("%s ok\r\n" , CString(args[0])); fflush(stdout);
         
         e->Wrap(args.This());
         return args.This();
