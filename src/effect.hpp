@@ -46,7 +46,6 @@ public:
         for (unsigned int i = 0; i < 10 && i < xs->Length(); i++) {
             argv[i] = *String::Utf8Value(xs->Get(Integer::New(i)));
         }
-        
         sox_effect_options(e->effect, xs->Length(), argv);
         
         e->Wrap(args.This());
