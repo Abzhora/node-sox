@@ -2,12 +2,7 @@
   "targets": [
     {
       "target_name": "sox",
-      "sources": [ "sox.cc" ],
-      "libraries" : [ "-lsox" ]
-    },
-    {
-      "target_name": "format",
-      "sources": [ "src/format.cc" ],
+      "sources": [ "src/sox.cc" ],
       "libraries" : [ "-lsox" ],
       "include_dirs" : [ "src" ]
     }
