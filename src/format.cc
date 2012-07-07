@@ -10,6 +10,7 @@ using namespace node;
 
 #include <sox.h>
 #include "signal.hpp"
+#include "effect.hpp"
 
 class Format : public ObjectWrap {
 public:
@@ -116,6 +117,7 @@ void init(Handle<Object> target) {
     HandleScope scope;
     Format::Initialize(target);
     Signal::Initialize(target);
+    Effect::Initialize(target);
 }
 
 NODE_MODULE(format, init);
